@@ -1,0 +1,69 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('keluarga', function (Blueprint $table) {
+            $table->id();
+
+            // Nomor Kartu Keluarga
+            $table->string('no_kk', 16)->unique();
+
+            // Warga yang ditetapkan sebagai kepala keluarga
+            $table->foreignId('kepala_keluarga_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            // Data alamat keluarga
+            $table->text('alamat')->nullable();
+            $table->string('rt', 3)->nullable();
+            $table->string('rw', 3)->nullable();
+
+            $table->timestamps();
+        });
+
+        /*
+         * Membuat data keluarga awal dari warga yang sudah memiliki No. KK.
+         *
+         * Kepala keluarga TIDAK ditentukan otomatis.
+         * Kepala keluarga akan ditetapkan oleh Kepala Desa
+         * melalui halaman Data Keluarga.
+         */
+        $noKks = DB::table('users')
+            ->whereNotNull('no_kk')
+            ->where('no_kk', '!=', '')
+            ->select('no_kk')
+            ->distinct()
+            ->pluck('no_kk');
+
+        foreach ($noKks as $noKk) {
+            $anggota = DB::table('users')
+                ->where('no_kk', $noKk)
+                ->where('role', 'warga')
+                ->orderBy('id')
+                ->first();
+
+            DB::table('keluarga')->insert([
+                'no_kk' => $noKk,
+                'kepala_keluarga_id' => null,
+                'alamat' => $anggota?->alamat,
+                'rt' => $anggota?->rt,
+                'rw' => $anggota?->rw,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('keluarga');
+    }
+};
