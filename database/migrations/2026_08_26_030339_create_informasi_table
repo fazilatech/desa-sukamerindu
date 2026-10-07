@@ -1,0 +1,55 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Jangan membuat ulang jika tabel informasi sudah ada
+        if (!Schema::hasTable('informasi')) {
+
+            Schema::create('informasi', function (Blueprint $table) {
+
+                $table->id();
+
+                // Judul informasi
+                $table->string('judul');
+
+                // Isi informasi
+                $table->text('isi');
+
+                // Kategori informasi
+                $table->string('kategori')
+                    ->default('Informasi');
+
+                // Status tampil / disembunyikan
+                $table->enum('status', [
+                    'Publikasi',
+                    'Draft'
+                ])->default('Publikasi');
+
+                // User yang membuat informasi
+                $table->foreignId('dibuat_oleh')
+                    ->nullable()
+                    ->constrained('users')
+                    ->nullOnDelete();
+
+                $table->timestamps();
+            });
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('informasi');
+    }
+};
