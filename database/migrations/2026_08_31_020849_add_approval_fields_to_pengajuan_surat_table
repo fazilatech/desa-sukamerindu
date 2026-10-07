@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('pengajuan_surat', function (Blueprint $table) {
+            $table->unsignedBigInteger('disetujui_oleh')->nullable()->after('catatan');
+            $table->unsignedBigInteger('dibuat_oleh')->nullable()->after('disetujui_oleh');
+            $table->timestamp('tanggal_persetujuan')->nullable()->after('dibuat_oleh');
+            $table->timestamp('tanggal_proses')->nullable()->after('tanggal_persetujuan');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('pengajuan_surat', function (Blueprint $table) {
+            $table->dropColumn([
+                'disetujui_oleh',
+                'dibuat_oleh',
+                'tanggal_persetujuan',
+                'tanggal_proses',
+            ]);
+        });
+    }
+};
